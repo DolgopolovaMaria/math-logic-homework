@@ -130,10 +130,11 @@ public class SudokuTable {
         formula.setLength(0);
         int numberOfLines = 0;
 
+        //only one number in the cell
         for (int i = 0; i < 9; i++) {
             for (int j = 0; j < 9; j++) {
-                for (int k = 1; k < 10; k++) {
-                    for (int t = 1; t < 10; t++) {
+                for (int k = 1; k <= 9; k++) {
+                    for (int t = 1; t <= 9; t++) {
                         if (t != k) {
                             formula.append("-" + number(i, j, k) + " -" + number(i, j, t) + " 0" + separator);
                             numberOfLines++;
@@ -143,9 +144,10 @@ public class SudokuTable {
             }
         }
 
+        //there is a number in each cell
         for (int i = 0; i < 9; i++){
             for (int j = 0; j < 9; j++) {
-                for (int k = 1; k < 10; k++) {
+                for (int k = 1; k <= 9; k++) {
                     formula.append(number(i, j, k) + " ");
                 }
                 formula.append("0" + separator);
@@ -153,10 +155,11 @@ public class SudokuTable {
             }
         }
 
+        //all numbers in the line are different
         for (int i = 0; i < 9; i++) {
             for (int j = 0; j < 9; j++) {
                 for (int k = 0; k < 9; k++) {
-                    for (int t = 1; t < 10; t++) {
+                    for (int t = 1; t <= 9; t++) {
                         if (j != k) {
                             formula.append("-" + number(i, j, t) + " -" + number(i, k, t) + " 0 " + separator);
                             numberOfLines++;
@@ -166,10 +169,11 @@ public class SudokuTable {
             }
         }
 
+        //all numbers in the column are different
         for (int i = 0; i < 9; i++) {
             for (int j = 0; j < 9; j++) {
                 for (int k = 0; k < 9; k++) {
-                    for (int t = 1; t < 10; t++) {
+                    for (int t = 1; t <= 9; t++) {
                         if (i != k) {
                             formula.append("-" + number(i, j, t) + " -" + number(k, j, t) + " 0" + separator);
                             numberOfLines++;
@@ -179,20 +183,21 @@ public class SudokuTable {
             }
         }
 
+        //all numbers in the block are different
         for (int r = 0; r < 3; r++) {
             for (int c = 0; c < 3; c++) {
                 for (int i = 0; i < 3; i++) {
                     for (int j = 0; j < 3; j++) {
                         for (int k = 0; k < 3; k++) {
                             for (int t = 0; t < 3; t++) {
-                                for (int num = 1; num < 10; num++) {
-                                    int x1, y1, x2, y2;
-                                    x1 = r * 3 + i;
-                                    y1 = c * 3 + j;
-                                    x2 = r * 3 + k;
-                                    y2 = c * 3 + t;
-                                    if (!(x1 == x2 && y1 == y2)) {
-                                        formula.append("-" + number(x1, y1, num) + " -" + number(x2, y2, num) + " 0" + separator);
+                                for (int num = 1; num <= 9; num++) {
+                                    int lineNumber1 = r * 3 + i;
+                                    int columnNumber1 = c * 3 + j;
+                                    int lineNumber2 = r * 3 + k;
+                                    int columnNumber2 = c * 3 + t;
+                                    if ((lineNumber1 != lineNumber2) || (columnNumber1 != columnNumber2)) {
+                                        formula.append("-" + number(lineNumber1, columnNumber1, num) + " -"
+                                                + number(lineNumber2, columnNumber2, num) + " 0" + separator);
                                         numberOfLines++;
                                     }
                                 }
@@ -203,6 +208,7 @@ public class SudokuTable {
             }
         }
 
+        //defined variables
         for (int i = 0; i < 9; i++) {
             for (int j = 0; j < 9; j++) {
                 if (table[i][j] != -1) {
@@ -222,7 +228,7 @@ public class SudokuTable {
             writer.write("p cnf " + Integer.toString(numberOfVariables) + " " + Integer.toString(numberOfLines) + separator);
             writer.write(formula.toString());
             writer.close();
-            }
+        }
         catch (Exception e){
             e.printStackTrace();
             return false;
