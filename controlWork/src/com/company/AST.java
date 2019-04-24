@@ -5,6 +5,8 @@ public class AST {
     static public Formula createAST(String str) {
         if (str.length() == 1)
             return new Variable(str.charAt(0));
+        if(str.length() == 3)
+            return new Variable(str.charAt(1));
         int k = 0;
         for (int i = 0; i < str.length(); i++)
             if (k == 1) {

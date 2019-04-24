@@ -2,22 +2,22 @@ package com.company;
 
 import java.util.ArrayList;
 
-public class Sequence implements Cloneable{
-    Sequence left, right;
-    ArrayList<Formula> anticedent;
+public class Sequent implements Cloneable{
+    Sequent left, right;
+    ArrayList<Formula> antecedent;
     ArrayList<Formula> succedent;
-    Sequence() {
+    Sequent() {
         left = null;
         right = null;
         succedent = new ArrayList<>();
-        anticedent = new ArrayList<>();
+        antecedent = new ArrayList<>();
     }
     @Override
     public String toString() {
         StringBuilder str = new StringBuilder();
-        for (int i = 0; i < anticedent.size(); i++) {
-            str.append(anticedent.get(i).print());
-            if (anticedent.size() - 1 == i)
+        for (int i = 0; i < antecedent.size(); i++) {
+            str.append(antecedent.get(i).print());
+            if (antecedent.size() - 1 == i)
                 continue;
             str.append(", ");
         }
@@ -33,10 +33,10 @@ public class Sequence implements Cloneable{
     }
 
     @Override
-    public Sequence clone() throws CloneNotSupportedException{
-        Sequence newSequence = new Sequence();
-        newSequence.anticedent = new ArrayList<Formula>(anticedent);
-        newSequence.succedent = new ArrayList<Formula>(succedent);
-        return newSequence;
+    public Sequent clone() throws CloneNotSupportedException{
+        Sequent newsequent = new Sequent();
+        newsequent.antecedent = new ArrayList<Formula>(antecedent);
+        newsequent.succedent = new ArrayList<Formula>(succedent);
+        return newsequent;
     }
 }

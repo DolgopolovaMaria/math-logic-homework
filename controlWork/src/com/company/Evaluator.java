@@ -1,39 +1,45 @@
 package com.company;
 
+import java.util.ArrayList;
 import java.util.Scanner;
 
 public class Evaluator {
     public static void run() throws Exception {
         Scanner sc = new Scanner(System.in);
-        Formula formula = AST.createAST(sc.nextLine());
-        Sequence sequence = new Sequence();
-        sequence.succedent.add(formula);
-        createTreeSequence(sequence);
-        findCounterexample(sequence);
-        printTree(sequence, 0);
+        String input = sc.nextLine();
+        while (!input.equals("0")) {
+            Formula formula = AST.createAST(input);
+            Sequent sequent = new Sequent();
+            sequent.succedent.add(formula);
+            createTreeSequent(sequent);
+            removeDuplicatesFromSequent(sequent);
+            findCounterexample(sequent);
+            printTree(sequent, 0);
+            input = sc.nextLine();
+        }
     }
 
-    public static boolean findCounterexample(Sequence sequence)
+    private static boolean findCounterexample(Sequent sequent)
     {
-        if (sequence == null)
+        if (sequent == null)
             return false;
-        if (sequence.left == null && sequence.right == null)
+        if (sequent.left == null && sequent.right == null)
         {
             boolean ok = true;
-            for (int i = 0; i < sequence.anticedent.size(); i++)
-                for (int j = 0; j < sequence.succedent.size(); j++)
-                    if (((Variable)sequence.anticedent.get(i)).nameOfVarible == ((Variable)sequence.succedent.get(j)).nameOfVarible)
+            for (int i = 0; i < sequent.antecedent.size(); i++)
+                for (int j = 0; j < sequent.succedent.size(); j++)
+                    if (((Variable)sequent.antecedent.get(i)).nameOfVarible == ((Variable)sequent.succedent.get(j)).nameOfVarible)
                         ok = false;
             if (ok)
             {
                 System.out.println("Counterexample:");
                 System.out.print("1: ");
-                for (int i = 0; i < sequence.anticedent.size(); i++)
-                    System.out.print(((Variable)sequence.anticedent.get(i)).nameOfVarible + " ");
+                for (int i = 0; i < sequent.antecedent.size(); i++)
+                    System.out.print(((Variable)sequent.antecedent.get(i)).nameOfVarible + " ");
                 System.out.println();
                 System.out.print("0: ");
-                for (int i = 0; i < sequence.succedent.size(); i++)
-                    System.out.print(((Variable)sequence.succedent.get(i)).nameOfVarible + " ");
+                for (int i = 0; i < sequent.succedent.size(); i++)
+                    System.out.print(((Variable)sequent.succedent.get(i)).nameOfVarible + " ");
                 System.out.println();
                 System.out.println();
                 return true;
@@ -42,116 +48,145 @@ public class Evaluator {
         }
         else
         {
-            if (!findCounterexample(sequence.left))
-                return findCounterexample(sequence.right);
+            if (!findCounterexample(sequent.left))
+                return findCounterexample(sequent.right);
             return true;
         }
     }
 
-    public static void printTree(Sequence sequence, int n)
+    private static void printTree(Sequent sequent, int n)
     {
-        if (sequence != null) {
-            printTree(sequence.left, n+5);
+        if (sequent != null) {
+            printTree(sequent.left, n+5);
             for (int i = 0; i < n; i++)
                 System.out.print(" ");
-            System.out.println(sequence);
-            printTree(sequence.right, n+5);
+            System.out.println(sequent);
+            printTree(sequent.right, n+5);
         }
     }
 
-    public static void createTreeSequence(Sequence sequence) throws Exception{
-        for (int i = 0; i < sequence.anticedent.size(); i++) {
-            if (sequence.anticedent.get(i) instanceof Operator) {
-                Operator elem = ((Operator) sequence.anticedent.get(i));
+    private static ArrayList<Formula> removeDuplicatesFromList(ArrayList<Formula> list){
+        ArrayList<Formula> newList = new ArrayList<Formula>();
+        for(int i = 0; i < list.size(); i++){
+            char name = ((Variable)list.get(i)).nameOfVarible;
+            int n = 0;
+            while ((n < newList.size()) && (((Variable)newList.get(n)).nameOfVarible != name)){
+                n++;
+            }
+            if(n == newList.size()){
+                newList.add(new Variable(name));
+            }
+        }
+        return newList;
+    }
+
+    private static void removeDuplicatesFromSequent(Sequent sequent){
+        if (sequent == null)
+            return;
+        if (sequent.left == null && sequent.right == null){
+            sequent.antecedent = removeDuplicatesFromList(sequent.antecedent);
+            sequent.succedent = removeDuplicatesFromList(sequent.succedent);
+            return;
+        }
+        else{
+            removeDuplicatesFromSequent(sequent.left);
+            removeDuplicatesFromSequent(sequent.right);
+        }
+    }
+
+    private static void createTreeSequent(Sequent sequent) throws Exception{
+        for (int i = 0; i < sequent.antecedent.size(); i++) {
+            if (sequent.antecedent.get(i) instanceof Operator) {
+                Operator elem = ((Operator) sequent.antecedent.get(i));
                 switch (elem.operationType) {
                     case Implication: {
-                        Sequence newSequnce1 = sequence.clone();
-                        newSequnce1.anticedent.remove(i);
-                        newSequnce1.anticedent.add(elem.right);
-                        Sequence newSequnce2 = sequence.clone();
-                        newSequnce2.anticedent.remove(i);
+                        Sequent newSequnce1 = sequent.clone();
+                        newSequnce1.antecedent.remove(i);
+                        newSequnce1.antecedent.add(elem.right);
+                        Sequent newSequnce2 = sequent.clone();
+                        newSequnce2.antecedent.remove(i);
                         newSequnce2.succedent.add(elem.left);
-                        sequence.left = newSequnce1;
-                        sequence.right = newSequnce2;
-                        createTreeSequence(sequence.left);
-                        createTreeSequence(sequence.right);
+                        sequent.left = newSequnce1;
+                        sequent.right = newSequnce2;
+                        createTreeSequent(sequent.left);
+                        createTreeSequent(sequent.right);
                         return;
                     }
                     case Disjunction: {
-                        Sequence newSequnce1 = sequence.clone();
-                        newSequnce1.anticedent.remove(i);
-                        newSequnce1.anticedent.add(elem.left);
-                        Sequence newSequnce2 = sequence.clone();
-                        newSequnce2.anticedent.remove(i);
-                        newSequnce2.anticedent.add(elem.right);
-                        sequence.left = newSequnce1;
-                        sequence.right = newSequnce2;
-                        createTreeSequence(sequence.left);
-                        createTreeSequence(sequence.right);
+                        Sequent newSequnce1 = sequent.clone();
+                        newSequnce1.antecedent.remove(i);
+                        newSequnce1.antecedent.add(elem.left);
+                        Sequent newSequnce2 = sequent.clone();
+                        newSequnce2.antecedent.remove(i);
+                        newSequnce2.antecedent.add(elem.right);
+                        sequent.left = newSequnce1;
+                        sequent.right = newSequnce2;
+                        createTreeSequent(sequent.left);
+                        createTreeSequent(sequent.right);
                         return;
                     }
                     case Conjunction: {
-                        Sequence newSequnce1 = sequence.clone();
-                        newSequnce1.anticedent.remove(i);
-                        newSequnce1.anticedent.add(elem.left);
-                        newSequnce1.anticedent.add(elem.right);
-                        sequence.left = newSequnce1;
-                        createTreeSequence(sequence.left);
+                        Sequent newSequnce1 = sequent.clone();
+                        newSequnce1.antecedent.remove(i);
+                        newSequnce1.antecedent.add(elem.left);
+                        newSequnce1.antecedent.add(elem.right);
+                        sequent.left = newSequnce1;
+                        createTreeSequent(sequent.left);
                         return;
                     }
                     case Negation: {
-                        Sequence newSequnce1 = sequence.clone();
-                        newSequnce1.anticedent.remove(i);
+                        Sequent newSequnce1 = sequent.clone();
+                        newSequnce1.antecedent.remove(i);
                         newSequnce1.succedent.add(elem.right);
-                        sequence.right = newSequnce1;
-                        createTreeSequence(sequence.right);
+                        sequent.right = newSequnce1;
+                        createTreeSequent(sequent.right);
                         return;
                     }
                 }
             }
         }
 
-        for (int i = 0; i < sequence.succedent.size(); i++) {
-            if (sequence.succedent.get(i) instanceof Operator) {
-                Operator elem = ((Operator) sequence.succedent.get(i));
+        for (int i = 0; i < sequent.succedent.size(); i++) {
+            if (sequent.succedent.get(i) instanceof Operator) {
+                Operator elem = ((Operator) sequent.succedent.get(i));
                 switch (elem.operationType) {
                     case Implication: {
-                        Sequence newSequnce1 = sequence.clone();
+                        Sequent newSequnce1 = sequent.clone();
                         newSequnce1.succedent.remove(i);
-                        newSequnce1.anticedent.add(elem.left);
+                        newSequnce1.antecedent.add(elem.left);
                         newSequnce1.succedent.add(elem.right);
-                        sequence.left = newSequnce1;
-                        createTreeSequence(sequence.left);
+                        sequent.left = newSequnce1;
+                        createTreeSequent(sequent.left);
                         return;
                     }
                     case Disjunction: {
-                        Sequence newSequnce1 = sequence.clone();
+                        Sequent newSequnce1 = sequent.clone();
                         newSequnce1.succedent.remove(i);
                         newSequnce1.succedent.add(elem.left);
                         newSequnce1.succedent.add(elem.right);
-                        sequence.left = newSequnce1;
-                        createTreeSequence(sequence.left);
+                        sequent.left = newSequnce1;
+                        createTreeSequent(sequent.left);
                         return;
                     }
                     case Conjunction: {
-                        Sequence newSequnce1 = sequence.clone();
+                        Sequent newSequnce1 = sequent.clone();
                         newSequnce1.succedent.remove(i);
                         newSequnce1.succedent.add(elem.left);
-                        Sequence newSequnce2 = sequence.clone();
+                        Sequent newSequnce2 = sequent.clone();
                         newSequnce2.succedent.remove(i);
                         newSequnce2.succedent.add(elem.right);
-                        sequence.left = newSequnce1;
-                        sequence.right = newSequnce2;
-                        createTreeSequence(sequence.left);
-                        createTreeSequence(sequence.right);
+                        sequent.left = newSequnce1;
+                        sequent.right = newSequnce2;
+                        createTreeSequent(sequent.left);
+                        createTreeSequent(sequent.right);
                         return;
                     }
                     case Negation: {
-                        Sequence newSequnce1 = sequence.clone();
+                        Sequent newSequnce1 = sequent.clone();
                         newSequnce1.succedent.remove(i);
-                        newSequnce1.anticedent.add(elem.right);
-                        sequence.right = newSequnce1;
-                        createTreeSequence(sequence.right);
+                        newSequnce1.antecedent.add(elem.right);
+                        sequent.right = newSequnce1;
+                        createTreeSequent(sequent.right);
                         return;
                     }
                 }
