@@ -8,18 +8,18 @@ public class Evaluator {
         Scanner sc = new Scanner(System.in);
         String input = sc.nextLine();
         while (!input.equals("0")) {
-            Formula formula = AST.createAST(input);
+            AST ast = new AST(input);
             Sequent sequent = new Sequent();
-            sequent.succedent.add(formula);
+            sequent.succedent.add(ast.getRoot());
             createTreeSequent(sequent);
             removeDuplicatesFromSequent(sequent);
-            findCounterexample(sequent);
+            findCounterexample(sequent, input);
             printTree(sequent, 0);
             input = sc.nextLine();
         }
     }
 
-    private static boolean findCounterexample(Sequent sequent)
+    private static boolean findCounterexample(Sequent sequent, String input)
     {
         if (sequent == null)
             return false;
@@ -32,14 +32,31 @@ public class Evaluator {
                         ok = false;
             if (ok)
             {
+                ArrayList<Variable> variables = new ArrayList<Variable>();
                 System.out.println("Counterexample:");
                 System.out.print("1: ");
-                for (int i = 0; i < sequent.antecedent.size(); i++)
-                    System.out.print(((Variable)sequent.antecedent.get(i)).nameOfVarible + " ");
+                for (int i = 0; i < sequent.antecedent.size(); i++) {
+                    System.out.print(((Variable) sequent.antecedent.get(i)).nameOfVarible + " ");
+                    variables.add((Variable) sequent.antecedent.get(i));
+                }
                 System.out.println();
                 System.out.print("0: ");
-                for (int i = 0; i < sequent.succedent.size(); i++)
-                    System.out.print(((Variable)sequent.succedent.get(i)).nameOfVarible + " ");
+                for (int i = 0; i < sequent.succedent.size(); i++) {
+                    System.out.print(((Variable) sequent.succedent.get(i)).nameOfVarible + " ");
+                    variables.add((Variable) sequent.succedent.get(i));
+                }
+                for (int i = 0; i < input.length(); i++)
+                    if (Character.isLetter(input.charAt(i)))
+                    {
+                        boolean flag = false;
+                        for (int j = 0; j < variables.size(); j++)
+                            if (variables.get(j).nameOfVarible == input.charAt(i))
+                                flag = true;
+                        if (!flag) {
+                            System.out.print(input.charAt(i) + " ");
+                            variables.add(new Variable(input.charAt(i)));
+                        }
+                    }
                 System.out.println();
                 System.out.println();
                 return true;
@@ -48,8 +65,8 @@ public class Evaluator {
         }
         else
         {
-            if (!findCounterexample(sequent.left))
-                return findCounterexample(sequent.right);
+            if (!findCounterexample(sequent.left, input))
+                return findCounterexample(sequent.right, input);
             return true;
         }
     }
@@ -57,11 +74,11 @@ public class Evaluator {
     private static void printTree(Sequent sequent, int n)
     {
         if (sequent != null) {
-            printTree(sequent.left, n+5);
             for (int i = 0; i < n; i++)
                 System.out.print(" ");
             System.out.println(sequent);
             printTree(sequent.right, n+5);
+            printTree(sequent.left, n+5);
         }
     }
 

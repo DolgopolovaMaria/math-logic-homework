@@ -1,8 +1,17 @@
 package com.company;
 
 public class AST {
+    private Formula root;
 
-    static public Formula createAST(String str) {
+    public Formula getRoot(){
+        return root;
+    }
+
+    public AST(String str){
+        root = createAST(str);
+    }
+
+    private Formula createAST(String str) {
         if (str.length() == 1)
             return new Variable(str.charAt(0));
         if(str.length() == 3)
